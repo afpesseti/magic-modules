@@ -11,6 +11,8 @@ weight: 30
 
 ## Setup
 
+Authentication is described in more detail [here](https://github.com/hashicorp/terraform-provider-google/wiki/Developer-Best-Practices#authentication).
+
 Tests generally assume the following environment variables must be set in order to run tests:
 
 ```
@@ -34,7 +36,15 @@ GOOGLE_BILLING_ACCOUNT
 Unit tests (that is, tests that do not interact with the GCP API) are very fast and you can generally run them all if you have changed any of them:
 
 ```bash
+# for ga provider
+cd $GOPATH/src/github.com/hashicorp/terraform-provider-google
 make test
+make lint
+
+# for beta provider
+cd $GOPATH/src/github.com/hashicorp/terraform-provider-google-beta
+make test
+make lint
 ```
 
 ## Run acceptance tests

@@ -43,6 +43,11 @@ fi
 git checkout origin/$NEW_BRANCH
 popd
 
+if ! git diff --exit-code origin/main tools; then
+    ## Run unit tests for breaking change and missing test detector.
+    /test_tools.sh $MM_LOCAL_PATH $TPG_LOCAL_PATH $COMMIT_SHA $BUILD_ID $BUILD_STEP $PROJECT_ID
+fi
+
 ## Breaking change setup and execution
 TPG_LOCAL_PATH_OLD="${TPG_LOCAL_PATH}old"
 mkdir -p $TPG_LOCAL_PATH_OLD
@@ -99,6 +104,20 @@ BREAKINGCHANGES="$(/compare_breaking_changes.sh)"
 set -e
 popd
 
+if [ $PR_NUMBER == "6880" ]; then
+  ## Missing test setup and execution
+  pushd $MM_LOCAL_PATH/tools/missing-test-detector
+  go mod edit -replace google/provider/new=$(realpath $TPGB_LOCAL_PATH)
+  go mod edit -replace google/provider/old=$(realpath $TPGB_LOCAL_PATH_OLD)
+  go mod tidy
+  export MISSINGTESTS="$(go run . -provider-dir=$TPGB_LOCAL_PATH/google-beta)"
+  retVal=$?
+  if [ $retVal -ne 0 ]; then
+      export MISSINGTESTS=""
+  fi
+  popd
+fi
+
 # TF Conversion - for compatibility until at least Nov 15 2021
 mkdir -p $TFC_LOCAL_PATH
 # allow this to fail for compatibility during tfv/tgc transition phase
@@ -153,6 +172,10 @@ if [ -n "$BREAKINGCHANGES" ]; then
   else
     BREAKINGSTATE="failure"
   fi
+fi
+
+if [ -n "$MISSINGTESTS" ]; then
+  MESSAGE="${MESSAGE}${MISSINGTESTS}${NEWLINE}${NEWLINE}"
 fi
 
 

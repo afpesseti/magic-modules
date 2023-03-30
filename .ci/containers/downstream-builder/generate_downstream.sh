@@ -93,7 +93,7 @@ fi
 if [ "$REPO" == "terraform" ]; then
     pushd $LOCAL_PATH
     go mod download
-    find . -type f -not -wholename "./.git*" -not -wholename "./.changelog*" -not -name ".travis.yml" -not -name ".golangci.yml" -not -name "CHANGELOG.md" -not -name "GNUmakefile" -not -name "docscheck.sh" -not -name "LICENSE" -not -name "README.md" -not -wholename "./examples*" -not -name ".go-version" -not -name ".hashibot.hcl" -not -name "tools.go"  -exec git rm {} \;
+    find . -type f -not -wholename "./.git*" -not -wholename "./.changelog*" -not -name ".travis.yml" -not -name ".golangci.yml" -not -name "CHANGELOG.md" -not -name "GNUmakefile" -not -name "docscheck.sh" -not -name "LICENSE" -not -name "README.md" -not -wholename "./examples*" -not -name ".go-version" -not -name ".hashibot.hcl" -exec git rm {} \;
     popd
 fi
 
@@ -117,7 +117,9 @@ if [ "$REPO" == "terraform-validator" ] || [ "$REPO" == "tf-conversion" ]; then
     find ./test/** -type f -exec git rm {} \;
 
     popd
-    bundle exec compiler -a -e terraform -f validator -o $LOCAL_PATH -v $VERSION
+    rm -rf third_party/validator/tests/source
+    cp -rf third_party/validator/tests/tfv-source third_party/validator/tests/source
+    bundle exec compiler.rb -a -e terraform -f validator -o $LOCAL_PATH -v $VERSION
     pushd $LOCAL_PATH
 
     if [ "$COMMAND" == "downstream" ]; then
@@ -146,14 +148,14 @@ if [ "$REPO" == "terraform-validator" ] || [ "$REPO" == "tf-conversion" ]; then
     popd
 elif [ "$REPO" == "tf-oics" ]; then
     # use terraform generator with oics override
-    bundle exec compiler -a -e terraform -f oics -o $LOCAL_PATH -v $VERSION
+    bundle exec compiler.rb -a -e terraform -f oics -o $LOCAL_PATH -v $VERSION
 else
     if [ "$REPO" == "terraform" ]; then
         if [ "$VERSION" == "ga" ]; then
-            bundle exec compiler -a -e $REPO -o $LOCAL_PATH -v $VERSION --no-docs
-            bundle exec compiler -a -e $REPO -o $LOCAL_PATH -v beta --no-code
+            bundle exec compiler.rb -a -e $REPO -o $LOCAL_PATH -v $VERSION --no-docs
+            bundle exec compiler.rb -a -e $REPO -o $LOCAL_PATH -v beta --no-code
         else
-            bundle exec compiler -a -e $REPO -o $LOCAL_PATH -v $VERSION
+            bundle exec compiler.rb -a -e $REPO -o $LOCAL_PATH -v $VERSION
         fi
         pushd ../
         make tpgtools OUTPUT_PATH=$LOCAL_PATH VERSION=$VERSION
@@ -169,10 +171,6 @@ fi
 popd
 
 pushd $LOCAL_PATH
-
-if [ "$REPO" == "terraform" ]; then
-    make generate
-fi
 
 git config --local user.name "Modular Magician"
 git config --local user.email "magic-modules@google.com"

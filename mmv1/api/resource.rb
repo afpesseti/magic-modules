@@ -44,7 +44,7 @@ module Api
       # [Optional] If set to true, don't generate the resource.
       attr_reader :exclude
       # [Optional] If set to true, the resource is not able to be updated.
-      attr_reader :input
+      attr_reader :immutable
       # [Optional] If set to true, this resource uses an update mask to perform
       # updates. This is typical of newer GCP APIs.
       attr_reader :update_mask
@@ -244,7 +244,7 @@ module Api
       check :delete_verb, type: Symbol, default: :DELETE, allowed: %i[POST PUT PATCH DELETE]
       check :update_verb, type: Symbol, default: :PUT, allowed: %i[POST PUT PATCH]
 
-      check :input, type: :boolean
+      check :immutable, type: :boolean
       check :min_version, type: String
 
       check :has_self_link, type: :boolean, default: false
@@ -488,6 +488,24 @@ module Api
       end
     end
 
+    def merge(other)
+      result = self.class.new
+      instance_variables.each do |v|
+        result.instance_variable_set(v, instance_variable_get(v))
+      end
+
+      other.instance_variables.each do |v|
+        if other.instance_variable_get(v).instance_of?(Array)
+          result.instance_variable_set(v, deep_merge(result.instance_variable_get(v),
+                                                     other.instance_variable_get(v)))
+        else
+          result.instance_variable_set(v, other.instance_variable_get(v))
+        end
+      end
+
+      result
+    end
+
     # ====================
     # Debugging Methods
     # ====================
@@ -513,8 +531,8 @@ module Api
         json_out[v] = instance_variable_get(v) unless ignored_fields.include? v
       end
 
-      json_out.merge!(properties.map { |p| [p.name, p] }.to_h)
-      json_out.merge!(parameters.map { |p| [p.name, p] }.to_h)
+      json_out.merge!(properties.to_h { |p| [p.name, p] })
+      json_out.merge!(parameters.to_h { |p| [p.name, p] })
 
       JSON.generate(json_out, opts)
     end
