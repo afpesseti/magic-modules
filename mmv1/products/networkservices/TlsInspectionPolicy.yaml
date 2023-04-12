@@ -52,7 +52,7 @@ examples:
     vars:
       resource_name: 'my-tls-inspections-policy'
 parameters:
- - !ruby/object:Api::Type::String
+  - !ruby/object:Api::Type::String
     name: 'name'
     required: true
     url_param_only: true
