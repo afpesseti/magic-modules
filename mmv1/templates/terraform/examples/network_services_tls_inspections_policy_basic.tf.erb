@@ -1,18 +1,12 @@
-resource "google_privateca_ca_pool" "test" {
+resource "google_privateca_ca_pool" "basictest" {
     provider = google-beta
-  name = "<%= ctx[:vars]["name"] %>"
+  name = "capool-basic-test"
   location = "us-central1"
   tier = "ENTERPRISE"
-  publishing_options {
-    publish_ca_cert = true
-    publish_crl = true
-  }
-  labels = {
-    foo = "bar"
-  }
 }
+
 resource "google_network_services_tls_inspection_policy" "<%= ctx[:primary_resource_id] %>" {
   provider = google-beta
   name     = "<%= ctx[:vars]['resource_name'] %>"
-  ca_pool    = google_privateca_ca_pool.test.name
+  ca_pool    = google_privateca_ca_pool.basictest.name
 }
