@@ -47,7 +47,7 @@ import_format: ['projects/{{project}}/locations/{{location}}/tlsInspectionPolici
 examples:
   - !ruby/object:Provider::Terraform::Examples
     min_version: beta
-    name: 'network_services_tls_inspections_policy_basic'
+    name: 'network_security_tls_inspections_policy_basic'
     primary_resource_id: 'default'
     vars:
       resource_name: 'my-tls-inspections-policy'
